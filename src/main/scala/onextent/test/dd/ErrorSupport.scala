@@ -13,7 +13,26 @@ import com.typesafe.scalalogging.LazyLogging
 
 trait ErrorSupport extends LazyLogging {
 
-  val conf: Config = ConfigFactory.load()
+  val overridesLoc = "/opt/config/overrides.yaml"
+  val conf = {
+  
+    val file = new java.io.File(overridesLoc)
+    
+    file match {
+
+      case x: java.io.File if x.exists() =>
+        logger.info(s"loading overrides of application.conf from $overridesLoc")
+        val overrides: Config = ConfigFactory.parseFile(file)
+        overrides.withFallback(ConfigFactory.load())
+        
+      case _ => ConfigFactory.load()
+      
+    }
+  } 
+ 
+
+
+
   val corsOriginList: List[HttpOrigin] = conf
     .getStringList("main.corsOrigin")
     .asScala
