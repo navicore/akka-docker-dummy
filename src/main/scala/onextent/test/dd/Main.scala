@@ -22,6 +22,7 @@ object Main extends LazyLogging with JsonSupport with ErrorSupport {
       ApiRoute.apply ~
       ApiSegmentRoute.apply
 
+    logger.info(s"listening for $urlpath on $port")
     Http().bindAndHandle(route, "0.0.0.0", port)
   }
 }
