@@ -1,7 +1,8 @@
 package onextent.test.dd
 
-import collection.JavaConverters._
 import java.io.IOException
+import java.net.URL
+
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{HttpOrigin, HttpOriginRange}
 import akka.http.scaladsl.server.Directives._
@@ -11,27 +12,14 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.JavaConverters._
+
 trait ErrorSupport extends LazyLogging {
 
-  val overridesLoc = "/opt/config/overrides.yaml"
-  val conf = {
-  
-    val file = new java.io.File(overridesLoc)
-    
-    file match {
-
-      case x: java.io.File if x.exists() =>
-        logger.info(s"loading overrides of application.conf from $overridesLoc")
-        val overrides: Config = ConfigFactory.parseFile(file)
-        overrides.withFallback(ConfigFactory.load())
-        
-      case _ => ConfigFactory.load()
-      
-    }
-  } 
- 
-
-
+  val conf: Config = sys.env
+    .get("CONFIG_OVERRIDES_URL")
+    .fold(ConfigFactory.load)(u =>
+      ConfigFactory.parseURL(new URL(u)).withFallback(ConfigFactory.load))
 
   val corsOriginList: List[HttpOrigin] = conf
     .getStringList("main.corsOrigin")
@@ -70,4 +58,3 @@ trait ErrorSupport extends LazyLogging {
       }
     }
 }
-
